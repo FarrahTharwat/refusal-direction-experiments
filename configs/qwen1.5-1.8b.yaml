@@ -1,0 +1,19 @@
+model_name: "Qwen/Qwen1.5-1.8B-Chat"
+dtype: "float16"
+
+# data
+harmful_source: "advbench"
+harmless_source: "alpaca"
+extract_n: 32          # per-class size for direction extraction (paper convention)
+eval_n: 40             # per-class size for held-out evaluation; bump to 100 for headline numbers
+pool_multiplier: 4     # how much bigger the raw pool is than extract_n + eval_n, to survive refusal-filtering
+
+# direction extraction
+layer_sweep_start: 4   # skip very early layers
+layer_sweep_val_n: 16  # small validation slice used only to pick the best layer
+
+# sweep
+alphas: [0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
+betas:  [0, 1, 2, 4, 6, 8, 10, 12]
+
+seed: 0

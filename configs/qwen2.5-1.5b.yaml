@@ -1,0 +1,20 @@
+model_name: "Qwen/Qwen2.5-1.5B-Instruct"
+dtype: "float16"
+
+harmful_source: "advbench"
+harmless_source: "alpaca"
+extract_n: 32
+eval_n: 40
+pool_multiplier: 4
+
+layer_sweep_start: 4
+layer_sweep_val_n: 16
+
+alphas: [0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
+betas:  [0, 1, 2, 4, 6, 8, 10, 12]
+
+seed: 0
+
+# NOTE: not yet run/validated on this model — chat template and refusal-prefix
+# list may need small adjustments per model family. Treat as a starting point,
+# not a guarantee it works unmodified.

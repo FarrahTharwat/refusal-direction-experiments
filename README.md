@@ -1,33 +1,63 @@
-# Refusal Direction — A Reproduction
+# refusal-ablation
 
-A from-scratch reproduction of **"Refusal in Language Models Is Mediated by a
-Single Direction"** (Arditi et al., 2024), built for my own learning while
-reading the paper.
+A reproduction of **"Refusal in Language Models Is Mediated by a Single Direction"**
+(Arditi et al., 2024), extended with a held-out evaluation split, a layer-selection
+sweep, and an alpha/beta ablation-vs-addition sweep with a crossover plot.
 
 - Paper: https://arxiv.org/abs/2406.11717
 - Original authors' code: https://github.com/andyrdt/refusal_direction
 
-The method is entirely theirs; this repo is my own re-implementation to
-understand it end to end.
+The core method (difference-in-means direction, directional ablation and addition
+via forward hooks) is entirely theirs. This repo re-implements it end to end, adds
+a proper train/eval split (no more testing on the data the direction was built
+from), and adds quantitative refusal-rate measurement across a strength sweep,
+rather than eyeballing single examples.
 
 ## What it does
 
-Working on **Qwen1.5-1.8B-Chat**, this notebook:
+1. Loads harmful prompts (AdvBench) and harmless prompts (Alpaca), splitting each
+   into a **direction-extraction set** (32/32) and a **disjoint held-out eval set**
+   (configurable per model, see `configs/`).
+2. Extracts a **refusal direction** as the difference-in-means between harmful and
+   harmless last-token residual-stream activations — the layer is *selected* via a
+   validation sweep, not hardcoded.
+3. Applies **directional ablation** (removes the direction from every layer's
+   output) and **directional addition** (injects the direction at a single layer)
+   at configurable strengths, alpha and beta.
+4. Sweeps alpha and beta across a grid, measuring refusal rate on the held-out
+   harmful and harmless sets at each setting — producing a crossover plot showing
+   where harmful refusal collapses and where harmless refusal starts appearing.
 
-1. Loads harmful prompts (AdvBench) and harmless prompts (Alpaca), then filters
-   the harmful set down to prompts the model actually refuses.
-2. Extracts a **refusal direction** as the difference-in-means between harmful
-   and harmless last-token activations at a chosen layer.
-3. Applies **directional ablation** — projecting that direction out of the
-   residual stream with a forward hook — and the model then answers prompts it
-   previously refused.
+## Structure
+
+```
+configs/     one YAML per model — swap the config, not the code, to try a new model
+src/         core library: data loading, model/generation utils, direction
+             extraction + layer sweep, ablation/addition hooks, sweep + plotting
+notebooks/   thin orchestration notebook (demo.ipynb) — wires src/ together
+             for a given config; run this in Colab
+results/     CSVs + crossover plots land here after a run
+data/        small hand-picked harmful/harmless prompt pairs, used only for
+             blog-post screenshots (the real eval uses AdvBench/Alpaca directly)
+```
+
+## Running it
+
+Open `notebooks/demo.ipynb` in Colab (GPU runtime), point `CONFIG_PATH` at a
+config in `configs/`, and run top to bottom. Swapping models is just changing
+that one path — everything downstream re-derives itself.
+
+## Results
+
+*(fill in after running: crossover plot + 1-2 sentences on where the crossover
+happened for this model)*
 
 ## Notes
 
-- An interpretability / learning exercise. No modified model weights are
-  published here — only the code.
-- Direction vectors and model files are intentionally kept out of version
-  control (`.gitignore`).
+- Interpretability / evaluation exercise — no modified model weights are
+  published, only code and (once run) CSV/plot artifacts.
+- Direction vectors and model checkpoints are intentionally kept out of version
+  control (see `.gitignore`).
 
 ## Credit
 
